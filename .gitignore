@@ -1,0 +1,9 @@
+/.venv/
+/__pycache__/
+/server/node_modules/
+/server/.env
+
+# Personal document viewers; keep them out of the public portfolio repository.
+/webviewe1pdf.html
+/webviewssnumslip.html
+/webviewtransslip.html
