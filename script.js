@@ -8,6 +8,7 @@ const modalSubtitle = document.getElementById('modal-subtitle');
 const modalFrame = document.getElementById('modal-frame');
 const modalImage = document.getElementById('modal-image');
 const modalMessage = document.getElementById('modal-message');
+const modalOpenFile = modal?.querySelector('.modal-open-file');
 const contactForm = document.getElementById('contact-form');
 const formStatus = document.getElementById('form-status');
 const contactDeviceStorageKey = 'portfolioContactDeviceId';
@@ -61,6 +62,10 @@ function closeModal() {
     modalFrame.src = '';
     modalFrame.hidden = false;
   }
+  if (modalOpenFile) {
+    modalOpenFile.hidden = true;
+    modalOpenFile.removeAttribute('href');
+  }
   if (modalImage) {
     modalImage.onload = null;
     modalImage.onerror = null;
@@ -77,6 +82,17 @@ function closeModal() {
 
 function openModal(button) {
   if (!modal || !modalTitle || !modalSubtitle) return;
+
+  const file = button.dataset.file || '';
+  const isImage = /\.(?:png|jpe?g|gif|webp|bmp|avif)(?:[?#]|$)/i.test(file);
+  const isMobilePdf = file && !isImage && window.matchMedia('(max-width: 720px)').matches;
+  if (isMobilePdf) {
+    const pdfWindow = window.open(file, '_blank');
+    if (pdfWindow) {
+      pdfWindow.opener = null;
+      return;
+    }
+  }
 
   modalTrigger = button;
   const card = button.closest('.certificate-card');
@@ -101,14 +117,18 @@ function openModal(button) {
   modalTitle.textContent = title;
   modalSubtitle.textContent = [org, date].filter(Boolean).join(' • ');
 
-  const file = button.dataset.file || '';
-  const isImage = /\.(?:png|jpe?g|gif|webp|bmp|avif)(?:[?#]|$)/i.test(file);
   if (modalFrame) {
-    modalFrame.hidden = isImage;
-    modalFrame.src = file && !isImage ? `${file}#view=FitH&zoom=page-width` : '';
+    modalFrame.hidden = isImage || isMobilePdf;
+    modalFrame.src = file && !isImage && !isMobilePdf ? `${file}#view=FitH&zoom=page-width` : '';
+  }
+  if (modalOpenFile) {
+    modalOpenFile.hidden = !isMobilePdf;
+    if (isMobilePdf) modalOpenFile.href = file;
   }
   if (modalMessage) {
-    modalMessage.textContent = button.dataset.file ? 'Loading certificate preview...' : 'No certificate file is available yet.';
+    modalMessage.textContent = isMobilePdf
+      ? 'If the PDF did not open, use the link below.'
+      : button.dataset.file ? 'Loading certificate preview...' : 'No certificate file is available yet.';
     modalMessage.hidden = false;
   }
   if (modalImage) {
